@@ -1,0 +1,1130 @@
+{
+  "id": null,
+  "uid": "batch-ingestion",
+  "title": "Batch Ingestion Operations",
+  "description": "Health of the file-ingestion layer. Hover the (i) icon on any card to see what it measures.",
+  "tags": [
+    "pharma"
+  ],
+  "timezone": "Asia/Karachi",
+  "schemaVersion": 39,
+  "version": 0,
+  "refresh": "1m",
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
+  "editable": true,
+  "graphTooltip": 1,
+  "panels": [
+    {
+      "id": 1,
+      "type": "text",
+      "title": "",
+      "transparent": true,
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 20,
+        "h": 2
+      },
+      "options": {
+        "mode": "html",
+        "content": "<div style=\"font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.9;border-bottom:3px solid #3B82F6;padding-bottom:4px\">Headline KPIs</div>"
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Batch success rate",
+      "description": "Share of load batches that finished without an error: successful batches / all batches x 100. Green = healthy pipeline.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 2,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT ended_at AS \"time\", 100.0*sum((status='success')::int) OVER w/count(*) OVER w AS v FROM load_log WHERE $__timeFilter(ended_at) AND COALESCE(target_table,'(none)') IN ($tbl) AND status IN ($status) WINDOW w AS (ORDER BY ended_at, load_id) ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "noValue": "-",
+          "decimals": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#16A34A"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "text": {
+          "titleSize": 13,
+          "valueSize": 32
+        }
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Rows loaded",
+      "description": "Total rows successfully inserted into staging by all batches in the selected period (cumulative).",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 4,
+        "y": 2,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT ended_at AS \"time\", sum(rows_loaded) OVER w AS v FROM load_log WHERE $__timeFilter(ended_at) AND COALESCE(target_table,'(none)') IN ($tbl) AND status IN ($status) WINDOW w AS (ORDER BY ended_at, load_id) ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "-",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#2563EB"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "text": {
+          "titleSize": 13,
+          "valueSize": 32
+        }
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Batches run",
+      "description": "Number of file-load attempts (successful or failed), counted from load_log.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 2,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT ended_at AS \"time\", count(*) OVER w AS v FROM load_log WHERE $__timeFilter(ended_at) AND COALESCE(target_table,'(none)') IN ($tbl) AND status IN ($status) WINDOW w AS (ORDER BY ended_at, load_id) ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "-",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#7DB3FF"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "text": {
+          "titleSize": 13,
+          "valueSize": 32
+        }
+      }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Avg load duration",
+      "description": "Average time to read, validate and insert one file into staging (Timestamp end - Timestamp start).",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 2,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT ended_at AS \"time\", avg(duration_sec) OVER w AS v FROM load_log WHERE $__timeFilter(ended_at) AND COALESCE(target_table,'(none)') IN ($tbl) AND status IN ($status) WINDOW w AS (ORDER BY ended_at, load_id) ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "noValue": "-",
+          "decimals": 2,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#F59E0B"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "text": {
+          "titleSize": 13,
+          "valueSize": 32
+        }
+      }
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Rows rejected",
+      "description": "Rows dropped by validation (bad price, bad date, missing SKU ID, duplicates...). They are stored in stg_rejects.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 2,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT ended_at AS \"time\", sum(rows_rejected) OVER w AS v FROM load_log WHERE $__timeFilter(ended_at) AND COALESCE(target_table,'(none)') IN ($tbl) AND status IN ($status) WINDOW w AS (ORDER BY ended_at, load_id) ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "-",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#EF4444"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "text": {
+          "titleSize": 13,
+          "valueSize": 32
+        }
+      }
+    },
+    {
+      "id": 7,
+      "type": "text",
+      "title": "",
+      "transparent": true,
+      "gridPos": {
+        "x": 0,
+        "y": 7,
+        "w": 20,
+        "h": 2
+      },
+      "options": {
+        "mode": "html",
+        "content": "<div style=\"font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.9;border-bottom:3px solid #F59E0B;padding-bottom:4px\">Load behaviour</div>"
+      }
+    },
+    {
+      "id": 8,
+      "type": "barchart",
+      "title": "Load duration - last 10 files",
+      "description": "Seconds each of the 10 most recent files took to load. Long bars show which file is the slowest (the chart recommended in the project plan).",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 9,
+        "w": 10,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT source_file, duration_sec FROM load_log WHERE $__timeFilter(ended_at) AND COALESCE(target_table,'(none)') IN ($tbl) AND status IN ($status) ORDER BY ended_at DESC LIMIT 10"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#F59E0B"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "xField": "source_file",
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "barWidth": 0.8,
+        "xTickLabelRotation": 0,
+        "stacking": "none",
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      }
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "Rows loaded per batch",
+      "description": "Rows inserted by each batch over time, split by target staging table. Spikes are the large oversampling batches.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 10,
+        "y": 9,
+        "w": 10,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT ended_at AS \"time\", COALESCE(target_table,'(none)') AS metric, rows_loaded FROM load_log WHERE $__timeFilter(ended_at) AND COALESCE(target_table,'(none)') IN ($tbl) AND status IN ($status) ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 2,
+            "showPoints": "always",
+            "pointSize": 6,
+            "fillOpacity": 40,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 10,
+      "type": "text",
+      "title": "",
+      "transparent": true,
+      "gridPos": {
+        "x": 0,
+        "y": 18,
+        "w": 20,
+        "h": 2
+      },
+      "options": {
+        "mode": "html",
+        "content": "<div style=\"font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.9;border-bottom:3px solid #22C55E;padding-bottom:4px\">Quality</div>"
+      }
+    },
+    {
+      "id": 11,
+      "type": "piechart",
+      "title": "Successful vs failed batches",
+      "description": "How many batches succeeded and how many failed in the selected period.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 20,
+        "w": 7,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT status, count(*) AS batches FROM load_log WHERE $__timeFilter(ended_at) AND COALESCE(target_table,'(none)') IN ($tbl) AND status IN ($status) GROUP BY status"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "success"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#22C55E"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "failed"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#EF4444"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "pieType": "donut",
+        "displayLabels": [
+          "percent"
+        ],
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "legend": {
+          "showLegend": true,
+          "displayMode": "table",
+          "placement": "right",
+          "values": [
+            "value",
+            "percent"
+          ]
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      }
+    },
+    {
+      "id": 12,
+      "type": "barchart",
+      "title": "Loaded vs rejected rows per table",
+      "description": "For each staging table: rows that were loaded (blue) and rows that were rejected by validation (red).",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 7,
+        "y": 20,
+        "w": 13,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(target_table,'(none)') AS target_table, sum(rows_loaded) AS loaded, sum(rows_rejected) AS rejected FROM load_log WHERE $__timeFilter(ended_at) AND COALESCE(target_table,'(none)') IN ($tbl) AND status IN ($status) GROUP BY 1 ORDER BY 2 DESC"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "loaded"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#3B82F6"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "rejected"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#EF4444"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "xField": "target_table",
+        "orientation": "vertical",
+        "showValue": "auto",
+        "barWidth": 0.8,
+        "xTickLabelRotation": 0,
+        "stacking": "normal",
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 13,
+      "type": "text",
+      "title": "",
+      "transparent": true,
+      "gridPos": {
+        "x": 0,
+        "y": 28,
+        "w": 20,
+        "h": 2
+      },
+      "options": {
+        "mode": "html",
+        "content": "<div style=\"font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.9;border-bottom:3px solid #7DB3FF;padding-bottom:4px\">Batch drill-down</div>"
+      }
+    },
+    {
+      "id": 14,
+      "type": "table",
+      "title": "Latest batches",
+      "description": "The 50 most recent load attempts with their result. Failed rows show the start of the error message.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 30,
+        "w": 20,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT ended_at AS loaded_at, source_file, target_table, status, rows_read, rows_loaded, rows_rejected, duration_sec, left(error_message, 80) AS error FROM load_log WHERE $__timeFilter(ended_at) AND COALESCE(target_table,'(none)') IN ($tbl) AND status IN ($status) ORDER BY ended_at DESC LIMIT 50"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "status"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "success": {
+                        "color": "green",
+                        "index": 0,
+                        "text": "success"
+                      },
+                      "failed": {
+                        "color": "red",
+                        "index": 1,
+                        "text": "failed"
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      }
+    },
+    {
+      "id": 20,
+      "type": "text",
+      "title": "",
+      "transparent": true,
+      "gridPos": {
+        "x": 20,
+        "y": 0,
+        "w": 4,
+        "h": 2
+      },
+      "options": {
+        "mode": "html",
+        "content": "<div style=\"font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.9;border-bottom:3px solid #2563EB;padding-bottom:4px\">More details</div>"
+      }
+    },
+    {
+      "id": 21,
+      "type": "stat",
+      "title": "Rejection rate",
+      "description": "Rejected rows / rows read x 100. Shows how dirty the incoming data is.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 20,
+        "y": 2,
+        "w": 4,
+        "h": 6
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT ended_at AS \"time\", 100.0*sum(rows_rejected) OVER w/NULLIF(sum(rows_read) OVER w,0) AS v FROM load_log WHERE $__timeFilter(ended_at) AND COALESCE(target_table,'(none)') IN ($tbl) AND status IN ($status) WINDOW w AS (ORDER BY ended_at, load_id) ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "noValue": "-",
+          "decimals": 2,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#FCA5A5"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "text": {
+          "titleSize": 13,
+          "valueSize": 32
+        }
+      }
+    },
+    {
+      "id": 22,
+      "type": "stat",
+      "title": "Throughput",
+      "description": "Rows loaded per second of load time (total rows loaded / total load seconds).",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 20,
+        "y": 8,
+        "w": 4,
+        "h": 6
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT ended_at AS \"time\", sum(rows_loaded) OVER w/NULLIF(sum(duration_sec) OVER w,0) AS v FROM load_log WHERE $__timeFilter(ended_at) AND COALESCE(target_table,'(none)') IN ($tbl) AND status IN ($status) WINDOW w AS (ORDER BY ended_at, load_id) ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "suffix: rows/s",
+          "noValue": "-",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#D97706"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "text": {
+          "titleSize": 13,
+          "valueSize": 32
+        }
+      }
+    },
+    {
+      "id": 23,
+      "type": "stat",
+      "title": "Slowest batch",
+      "description": "Longest single file load so far in the selected period.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 20,
+        "y": 14,
+        "w": 4,
+        "h": 6
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT ended_at AS \"time\", max(duration_sec) OVER w AS v FROM load_log WHERE $__timeFilter(ended_at) AND COALESCE(target_table,'(none)') IN ($tbl) AND status IN ($status) WINDOW w AS (ORDER BY ended_at, load_id) ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "noValue": "-",
+          "decimals": 2,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#FCD34D"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "text": {
+          "titleSize": 13,
+          "valueSize": 32
+        }
+      }
+    },
+    {
+      "id": 24,
+      "type": "stat",
+      "title": "Failed batches",
+      "description": "Batches that ended in status failed (the file is moved to the failed folder).",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 20,
+        "y": 20,
+        "w": 4,
+        "h": 6
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT ended_at AS \"time\", sum((status<>'success')::int) OVER w AS v FROM load_log WHERE $__timeFilter(ended_at) AND COALESCE(target_table,'(none)') IN ($tbl) AND status IN ($status) WINDOW w AS (ORDER BY ended_at, load_id) ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "-",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#DC2626"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "text": {
+          "titleSize": 13,
+          "valueSize": 32
+        }
+      }
+    },
+    {
+      "id": 25,
+      "type": "stat",
+      "title": "Minutes since last load",
+      "description": "Data freshness: minutes since the most recent batch finished. Green under 60, orange under 24 h, red beyond that. Ignores filters.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 20,
+        "y": 26,
+        "w": 4,
+        "h": 6
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT EXTRACT(EPOCH FROM (now() AT TIME ZONE 'UTC' - max(ended_at)))/60 AS v FROM load_log"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "m",
+          "noValue": "-",
+          "decimals": 0,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 60
+              },
+              {
+                "color": "red",
+                "value": 1440
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "text": {
+          "titleSize": 13,
+          "valueSize": 32
+        }
+      }
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "tbl",
+        "label": "Target table",
+        "type": "query",
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "staging_pg"
+        },
+        "query": "SELECT DISTINCT COALESCE(target_table,'(none)') FROM load_log ORDER BY 1",
+        "definition": "SELECT DISTINCT COALESCE(target_table,'(none)') FROM load_log ORDER BY 1",
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "sort": 1,
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0
+      },
+      {
+        "name": "status",
+        "label": "Status",
+        "type": "query",
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "staging_pg"
+        },
+        "query": "SELECT DISTINCT status FROM load_log ORDER BY 1",
+        "definition": "SELECT DISTINCT status FROM load_log ORDER BY 1",
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "sort": 1,
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0
+      }
+    ]
+  },
+  "links": [
+    {
+      "type": "dashboards",
+      "title": "Dashboards",
+      "tags": [
+        "pharma"
+      ],
+      "asDropdown": false,
+      "includeVars": false,
+      "keepTime": true,
+      "icon": "external link",
+      "targetBlank": false,
+      "tooltip": "",
+      "url": ""
+    }
+  ]
+}

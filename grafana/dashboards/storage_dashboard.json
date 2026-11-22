@@ -1,0 +1,1076 @@
+{
+  "id": null,
+  "uid": "storage-monitoring",
+  "title": "Storage Monitoring",
+  "description": "Row counts, size and date coverage across staging, mart and file folders. Hover the (i) icon on any card to see what it measures.",
+  "tags": [
+    "pharma"
+  ],
+  "timezone": "Asia/Karachi",
+  "schemaVersion": 39,
+  "version": 0,
+  "refresh": "1m",
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
+  "editable": true,
+  "graphTooltip": 1,
+  "panels": [
+    {
+      "id": 1,
+      "type": "text",
+      "title": "",
+      "transparent": true,
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 20,
+        "h": 2
+      },
+      "options": {
+        "mode": "html",
+        "content": "<div style=\"font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.9;border-bottom:3px solid #3B82F6;padding-bottom:4px\">Headline KPIs (whole warehouse - not affected by the filters)</div>"
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Mart fact rows",
+      "description": "Rows in the star-schema fact tables (sales + hospital demand) in the DuckDB mart. Sparkline = growth between snapshots.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 2,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT captured_at AS \"time\", sum(row_count) AS v FROM storage_stats WHERE object_name LIKE 'fact_%' AND $__timeFilter(captured_at) GROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "-",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#2563EB"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "text": {
+          "titleSize": 13,
+          "valueSize": 32
+        }
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Staging rows",
+      "description": "Rows in the Postgres staging tables (stg_master, stg_sales, stg_hospital_demand).",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 4,
+        "y": 2,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT captured_at AS \"time\", sum(row_count) AS v FROM storage_stats WHERE layer='staging' AND object_name LIKE 'stg_%' AND $__timeFilter(captured_at) GROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "-",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#7DB3FF"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "text": {
+          "titleSize": 13,
+          "valueSize": 32
+        }
+      }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Storage footprint",
+      "description": "Combined size of the DuckDB file, the Postgres staging tables and the data folders (landing / processed / failed).",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 2,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT captured_at AS \"time\", sum(size_mb) AS v FROM storage_stats WHERE size_mb IS NOT NULL AND $__timeFilter(captured_at) GROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decmbytes",
+          "noValue": "-",
+          "decimals": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#8B5CF6"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "text": {
+          "titleSize": 13,
+          "valueSize": 32
+        }
+      }
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Date coverage",
+      "description": "Days between the earliest and latest date in the fact tables. Checks that the 2023-2025 range (plus generated data) is fully represented.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 2,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT captured_at AS \"time\", (max(max_date)-min(min_date)) AS v FROM storage_stats WHERE min_date IS NOT NULL AND $__timeFilter(captured_at) GROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "suffix: days",
+          "noValue": "-",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#16A34A"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "text": {
+          "titleSize": 13,
+          "valueSize": 32
+        }
+      }
+    },
+    {
+      "id": 7,
+      "type": "stat",
+      "title": "Rejected rows stored",
+      "description": "Rows kept in stg_rejects after failing validation.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 2,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT captured_at AS \"time\", row_count AS v FROM storage_stats WHERE object_name='stg_rejects' AND $__timeFilter(captured_at) GROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "-",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#EF4444"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "text": {
+          "titleSize": 13,
+          "valueSize": 32
+        }
+      }
+    },
+    {
+      "id": 8,
+      "type": "text",
+      "title": "",
+      "transparent": true,
+      "gridPos": {
+        "x": 0,
+        "y": 7,
+        "w": 20,
+        "h": 2
+      },
+      "options": {
+        "mode": "html",
+        "content": "<div style=\"font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.9;border-bottom:3px solid #8B5CF6;padding-bottom:4px\">Where the data lives (filters apply below)</div>"
+      }
+    },
+    {
+      "id": 9,
+      "type": "piechart",
+      "title": "Storage breakdown by source (rows)",
+      "description": "Share of staging rows contributed by each source domain (latest snapshot).",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 9,
+        "w": 8,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT CASE object_name WHEN 'stg_master' THEN '01 master data' WHEN 'stg_sales' THEN '05 pharmacy sales' WHEN 'stg_hospital_demand' THEN '06 hospital demand' END AS source, row_count FROM v_storage_latest WHERE object_name IN ('stg_master','stg_sales','stg_hospital_demand') AND object_name IN ($object)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "pieType": "donut",
+        "displayLabels": [
+          "percent"
+        ],
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "legend": {
+          "showLegend": true,
+          "displayMode": "table",
+          "placement": "right",
+          "values": [
+            "value",
+            "percent"
+          ]
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      }
+    },
+    {
+      "id": 10,
+      "type": "barchart",
+      "title": "Size by layer (MB)",
+      "description": "Disk space per layer: staging (Postgres), warehouse (DuckDB) and the file folders.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 9,
+        "w": 6,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT layer, sum(size_mb) AS size_mb FROM v_storage_latest WHERE layer IN ($layer) AND object_name IN ($object) GROUP BY layer"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decmbytes",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#8B5CF6"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "xField": "layer",
+        "orientation": "vertical",
+        "showValue": "auto",
+        "barWidth": 0.8,
+        "xTickLabelRotation": 0,
+        "stacking": "none",
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      }
+    },
+    {
+      "id": 11,
+      "type": "barchart",
+      "title": "Files by folder",
+      "description": "Number of files waiting in landing, archived in processed, or rejected in failed.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 14,
+        "y": 9,
+        "w": 6,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT object_name AS folder, row_count AS files FROM v_storage_latest WHERE layer = 'files' AND layer IN ($layer) AND object_name IN ($object)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#7DB3FF"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "xField": "folder",
+        "orientation": "vertical",
+        "showValue": "auto",
+        "barWidth": 0.8,
+        "xTickLabelRotation": 0,
+        "stacking": "none",
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      }
+    },
+    {
+      "id": 12,
+      "type": "text",
+      "title": "",
+      "transparent": true,
+      "gridPos": {
+        "x": 0,
+        "y": 18,
+        "w": 20,
+        "h": 2
+      },
+      "options": {
+        "mode": "html",
+        "content": "<div style=\"font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.9;border-bottom:3px solid #2563EB;padding-bottom:4px\">Growth and volume</div>"
+      }
+    },
+    {
+      "id": 13,
+      "type": "barchart",
+      "title": "Rows per table",
+      "description": "Row count of every staging and mart table, largest first (latest snapshot).",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 20,
+        "w": 10,
+        "h": 10
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT object_name, row_count FROM v_storage_latest WHERE layer IN ('staging','mart') AND layer IN ($layer) AND object_name IN ($object) ORDER BY 2 DESC"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#3B82F6"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "xField": "object_name",
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "barWidth": 0.8,
+        "xTickLabelRotation": 0,
+        "stacking": "none",
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      }
+    },
+    {
+      "id": 14,
+      "type": "timeseries",
+      "title": "Growth over time",
+      "description": "Row counts of the main tables at each pipeline run. Each DAG run adds a snapshot, so rising lines prove the warehouse keeps history.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 10,
+        "y": 20,
+        "w": 10,
+        "h": 10
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT captured_at AS \"time\", object_name AS metric, row_count FROM storage_stats WHERE object_name IN ('stg_sales','fact_pharmacy_sales','stg_hospital_demand','fact_hospital_demand') AND layer IN ($layer) AND object_name IN ($object) AND $__timeFilter(captured_at) ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "showPoints": "always",
+            "pointSize": 6,
+            "fillOpacity": 12,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 15,
+      "type": "text",
+      "title": "",
+      "transparent": true,
+      "gridPos": {
+        "x": 0,
+        "y": 30,
+        "w": 20,
+        "h": 2
+      },
+      "options": {
+        "mode": "html",
+        "content": "<div style=\"font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.9;border-bottom:3px solid #22C55E;padding-bottom:4px\">Date coverage</div>"
+      }
+    },
+    {
+      "id": 16,
+      "type": "table",
+      "title": "Date coverage per fact table",
+      "description": "Earliest and latest date per fact table and how many days that spans.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 32,
+        "w": 20,
+        "h": 6
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT object_name, min_date, max_date, (max_date - min_date) AS days_covered FROM v_storage_latest WHERE min_date IS NOT NULL AND layer IN ($layer) AND object_name IN ($object)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      }
+    },
+    {
+      "id": 30,
+      "type": "text",
+      "title": "",
+      "transparent": true,
+      "gridPos": {
+        "x": 20,
+        "y": 0,
+        "w": 4,
+        "h": 2
+      },
+      "options": {
+        "mode": "html",
+        "content": "<div style=\"font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.9;border-bottom:3px solid #7C3AED;padding-bottom:4px\">More details</div>"
+      }
+    },
+    {
+      "id": 31,
+      "type": "stat",
+      "title": "DuckDB file size",
+      "description": "Size of sdi_mart.duckdb, the analytical data mart.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 20,
+        "y": 2,
+        "w": 4,
+        "h": 6
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT captured_at AS \"time\", sum(size_mb) AS v FROM storage_stats WHERE object_name='sdi_mart.duckdb' AND $__timeFilter(captured_at) GROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decmbytes",
+          "noValue": "-",
+          "decimals": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#7C3AED"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "text": {
+          "titleSize": 13,
+          "valueSize": 32
+        }
+      }
+    },
+    {
+      "id": 32,
+      "type": "stat",
+      "title": "Postgres staging size",
+      "description": "Disk space used by the staging and log tables in Postgres.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 20,
+        "y": 8,
+        "w": 4,
+        "h": 6
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT captured_at AS \"time\", sum(size_mb) AS v FROM storage_stats WHERE layer='staging' AND $__timeFilter(captured_at) GROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decmbytes",
+          "noValue": "-",
+          "decimals": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#C4B5FD"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "text": {
+          "titleSize": 13,
+          "valueSize": 32
+        }
+      }
+    },
+    {
+      "id": 33,
+      "type": "stat",
+      "title": "Bytes per staged row",
+      "description": "Average storage cost of one staged row (staging size / staging rows). Useful to estimate how big the warehouse gets if the data grows.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 20,
+        "y": 14,
+        "w": 4,
+        "h": 6
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT captured_at AS \"time\", sum(size_mb)*1048576.0/NULLIF(sum(row_count),0) AS v FROM storage_stats WHERE layer='staging' AND object_name LIKE 'stg_%' AND $__timeFilter(captured_at) GROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "noValue": "-",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#8B5CF6"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "text": {
+          "titleSize": 13,
+          "valueSize": 32
+        }
+      }
+    },
+    {
+      "id": 34,
+      "type": "stat",
+      "title": "Files in failed",
+      "description": "Files that could not be loaded and were moved to data/failed. Should be 0.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 20,
+        "y": 20,
+        "w": 4,
+        "h": 6
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT captured_at AS \"time\", row_count AS v FROM storage_stats WHERE layer='files' AND object_name='failed' AND $__timeFilter(captured_at) GROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "-",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#DC2626"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "text": {
+          "titleSize": 13,
+          "valueSize": 32
+        }
+      }
+    },
+    {
+      "id": 35,
+      "type": "stat",
+      "title": "Fact growth in period",
+      "description": "Percentage growth of the fact tables since the first snapshot of the selected time range.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 20,
+        "y": 26,
+        "w": 4,
+        "h": 6
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT \"time\", 100.0*(v-first_value(v) OVER (ORDER BY \"time\"))/NULLIF(first_value(v) OVER (ORDER BY \"time\"),0) AS v FROM (SELECT captured_at AS \"time\", sum(row_count) AS v FROM storage_stats WHERE object_name LIKE 'fact_%' AND $__timeFilter(captured_at) GROUP BY 1 ORDER BY 1) s ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "noValue": "-",
+          "decimals": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#3B82F6"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "text": {
+          "titleSize": 13,
+          "valueSize": 32
+        }
+      }
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "layer",
+        "label": "Layer",
+        "type": "query",
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "staging_pg"
+        },
+        "query": "SELECT DISTINCT layer FROM storage_stats ORDER BY 1",
+        "definition": "SELECT DISTINCT layer FROM storage_stats ORDER BY 1",
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "sort": 1,
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0
+      },
+      {
+        "name": "object",
+        "label": "Object",
+        "type": "query",
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "staging_pg"
+        },
+        "query": "SELECT DISTINCT object_name FROM storage_stats WHERE layer IN ($layer) ORDER BY 1",
+        "definition": "SELECT DISTINCT object_name FROM storage_stats WHERE layer IN ($layer) ORDER BY 1",
+        "refresh": 2,
+        "multi": true,
+        "includeAll": true,
+        "sort": 1,
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0
+      }
+    ]
+  },
+  "links": [
+    {
+      "type": "dashboards",
+      "title": "Dashboards",
+      "tags": [
+        "pharma"
+      ],
+      "asDropdown": false,
+      "includeVars": false,
+      "keepTime": true,
+      "icon": "external link",
+      "targetBlank": false,
+      "tooltip": "",
+      "url": ""
+    }
+  ]
+}

@@ -1,0 +1,1177 @@
+{
+  "id": null,
+  "uid": "query-performance",
+  "title": "Query Performance Monitoring",
+  "description": "Speed and reliability of the analytical queries. Hover the (i) icon on any card to see what it measures.",
+  "tags": [
+    "pharma"
+  ],
+  "timezone": "Asia/Karachi",
+  "schemaVersion": 39,
+  "version": 0,
+  "refresh": "1m",
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
+  "editable": true,
+  "graphTooltip": 1,
+  "panels": [
+    {
+      "id": 1,
+      "type": "text",
+      "title": "",
+      "transparent": true,
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 20,
+        "h": 2
+      },
+      "options": {
+        "mode": "html",
+        "content": "<div style=\"font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.9;border-bottom:3px solid #F59E0B;padding-bottom:4px\">Headline KPIs</div>"
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Query error rate",
+      "description": "Failed queries / all queries x 100 (syntax errors, missing columns, timeouts). Green under 1 %, orange up to 5 %, red above.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 2,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT executed_at AS \"time\", 100.0*sum((status='failed')::int) OVER w/count(*) OVER w AS v FROM query_log WHERE $__timeFilter(executed_at) AND query_name IN ($qname) AND variant IN ($variant) AND status IN ($qstatus) WINDOW w AS (ORDER BY executed_at) ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "noValue": "-",
+          "decimals": 1,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "text": {
+          "titleSize": 13,
+          "valueSize": 32
+        }
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Queries run",
+      "description": "Number of analytical queries executed in the selected period.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 4,
+        "y": 2,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT executed_at AS \"time\", count(*) OVER w AS v FROM query_log WHERE $__timeFilter(executed_at) AND query_name IN ($qname) AND variant IN ($variant) AND status IN ($qstatus) WINDOW w AS (ORDER BY executed_at) ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "-",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#2563EB"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "text": {
+          "titleSize": 13,
+          "valueSize": 32
+        }
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Avg query time",
+      "description": "Average execution time of a query in milliseconds. Lower is better.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 2,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT executed_at AS \"time\", avg(duration_ms) OVER w AS v FROM query_log WHERE $__timeFilter(executed_at) AND query_name IN ($qname) AND variant IN ($variant) AND status IN ($qstatus) WINDOW w AS (ORDER BY executed_at) ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "noValue": "-",
+          "decimals": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#F59E0B"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "text": {
+          "titleSize": 13,
+          "valueSize": 32
+        }
+      }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "p95 query time",
+      "description": "95 % of queries finish faster than this value: it shows the slow tail that an average hides.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 2,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT percentile_cont(0.95) WITHIN GROUP (ORDER BY duration_ms) AS v FROM query_log WHERE $__timeFilter(executed_at) AND query_name IN ($qname) AND variant IN ($variant) AND status IN ($qstatus) "
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "noValue": "-",
+          "decimals": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#D97706"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "text": {
+          "titleSize": 13,
+          "valueSize": 32
+        }
+      }
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Best speedup",
+      "description": "Largest improvement of an optimized query over its baseline (baseline median / optimized median).",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 2,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT max(speedup_x) AS v FROM v_query_speedup WHERE query_name IN ($qname)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "suffix: x",
+          "noValue": "-",
+          "decimals": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#16A34A"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "text": {
+          "titleSize": 13,
+          "valueSize": 32
+        }
+      }
+    },
+    {
+      "id": 7,
+      "type": "text",
+      "title": "",
+      "transparent": true,
+      "gridPos": {
+        "x": 0,
+        "y": 7,
+        "w": 20,
+        "h": 2
+      },
+      "options": {
+        "mode": "html",
+        "content": "<div style=\"font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.9;border-bottom:3px solid #22C55E;padding-bottom:4px\">Optimization results</div>"
+      }
+    },
+    {
+      "id": 8,
+      "type": "barchart",
+      "title": "Median time: baseline vs indexed vs optimized",
+      "description": "Median execution time per query for each optimization step. Shorter bars after indexing / partitioning / summary tables prove the optimization worked. Ignores the Variant filter.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 9,
+        "w": 12,
+        "h": 10
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT query_name, percentile_cont(0.5) WITHIN GROUP (ORDER BY duration_ms) FILTER (WHERE variant='baseline') AS baseline_ms, percentile_cont(0.5) WITHIN GROUP (ORDER BY duration_ms) FILTER (WHERE variant='indexed') AS indexed_ms, percentile_cont(0.5) WITHIN GROUP (ORDER BY duration_ms) FILTER (WHERE variant='optimized') AS optimized_ms FROM query_log WHERE $__timeFilter(executed_at) AND query_name IN ($qname) AND status <> 'failed' AND variant IN ('baseline','indexed','optimized') GROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "baseline_ms"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#EF4444"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "indexed_ms"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#F59E0B"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "optimized_ms"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#22C55E"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "xField": "query_name",
+        "orientation": "vertical",
+        "showValue": "auto",
+        "barWidth": 0.8,
+        "xTickLabelRotation": 0,
+        "stacking": "none",
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      }
+    },
+    {
+      "id": 9,
+      "type": "table",
+      "title": "Speedup per query",
+      "description": "Baseline vs optimized median time and the resulting speedup factor.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 9,
+        "w": 8,
+        "h": 10
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT query_name, baseline_ms, optimized_ms, speedup_x FROM v_query_speedup WHERE query_name IN ($qname) ORDER BY speedup_x DESC"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "speedup_x"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#22C55E"
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      }
+    },
+    {
+      "id": 10,
+      "type": "text",
+      "title": "",
+      "transparent": true,
+      "gridPos": {
+        "x": 0,
+        "y": 19,
+        "w": 20,
+        "h": 2
+      },
+      "options": {
+        "mode": "html",
+        "content": "<div style=\"font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.9;border-bottom:3px solid #3B82F6;padding-bottom:4px\">Workload</div>"
+      }
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "Queries over time",
+      "description": "Successful (blue) and failed (red) queries per time bucket.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 21,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT $__timeGroupAlias(executed_at,$__interval), count(*) FILTER (WHERE status <> 'failed') AS ok, count(*) FILTER (WHERE status = 'failed') AS failed FROM query_log WHERE $__timeFilter(executed_at) AND query_name IN ($qname) AND variant IN ($variant) AND status IN ($qstatus) GROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 2,
+            "showPoints": "always",
+            "pointSize": 6,
+            "fillOpacity": 40,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ok"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#3B82F6"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "failed"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#EF4444"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 12,
+      "type": "barchart",
+      "title": "Average time per query",
+      "description": "Average execution time of each query across all variants. Tall bars point at unoptimized joins or missing indexes.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 21,
+        "w": 8,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT query_name, avg(duration_ms) AS avg_ms FROM query_log WHERE $__timeFilter(executed_at) AND query_name IN ($qname) AND variant IN ($variant) AND status IN ($qstatus) GROUP BY 1 ORDER BY 2 DESC"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#F59E0B"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "xField": "query_name",
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "barWidth": 0.8,
+        "xTickLabelRotation": 0,
+        "stacking": "none",
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      }
+    },
+    {
+      "id": 13,
+      "type": "text",
+      "title": "",
+      "transparent": true,
+      "gridPos": {
+        "x": 0,
+        "y": 29,
+        "w": 20,
+        "h": 2
+      },
+      "options": {
+        "mode": "html",
+        "content": "<div style=\"font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.9;border-bottom:3px solid #EF4444;padding-bottom:4px\">Errors</div>"
+      }
+    },
+    {
+      "id": 14,
+      "type": "table",
+      "title": "Latest failed queries",
+      "description": "The 20 most recent queries that failed, with the start of the error message.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 31,
+        "w": 20,
+        "h": 6
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT executed_at AS executed_at, query_name, variant, status, left(error_message, 100) AS error FROM query_log WHERE $__timeFilter(executed_at) AND query_name IN ($qname) AND variant IN ($variant) AND status IN ($qstatus) AND status = 'failed' ORDER BY executed_at DESC LIMIT 20"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "status"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "success": {
+                        "color": "green",
+                        "index": 0,
+                        "text": "success"
+                      },
+                      "failed": {
+                        "color": "red",
+                        "index": 1,
+                        "text": "failed"
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      }
+    },
+    {
+      "id": 20,
+      "type": "text",
+      "title": "",
+      "transparent": true,
+      "gridPos": {
+        "x": 20,
+        "y": 0,
+        "w": 4,
+        "h": 2
+      },
+      "options": {
+        "mode": "html",
+        "content": "<div style=\"font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.9;border-bottom:3px solid #D97706;padding-bottom:4px\">More details</div>"
+      }
+    },
+    {
+      "id": 21,
+      "type": "stat",
+      "title": "Median query time",
+      "description": "Half of the queries are faster than this. More robust than the average.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 20,
+        "y": 2,
+        "w": 4,
+        "h": 6
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY duration_ms) AS v FROM query_log WHERE $__timeFilter(executed_at) AND query_name IN ($qname) AND variant IN ($variant) AND status IN ($qstatus) "
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "noValue": "-",
+          "decimals": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#FCD34D"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "text": {
+          "titleSize": 13,
+          "valueSize": 32
+        }
+      }
+    },
+    {
+      "id": 22,
+      "type": "stat",
+      "title": "Slowest query",
+      "description": "Longest single query execution so far in the selected period.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 20,
+        "y": 8,
+        "w": 4,
+        "h": 6
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT executed_at AS \"time\", max(duration_ms) OVER w AS v FROM query_log WHERE $__timeFilter(executed_at) AND query_name IN ($qname) AND variant IN ($variant) AND status IN ($qstatus) WINDOW w AS (ORDER BY executed_at) ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "noValue": "-",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#D97706"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "text": {
+          "titleSize": 13,
+          "valueSize": 32
+        }
+      }
+    },
+    {
+      "id": 23,
+      "type": "stat",
+      "title": "Failed queries",
+      "description": "Count of queries that ended in status failed.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 20,
+        "y": 14,
+        "w": 4,
+        "h": 6
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT executed_at AS \"time\", sum((status='failed')::int) OVER w AS v FROM query_log WHERE $__timeFilter(executed_at) AND query_name IN ($qname) AND variant IN ($variant) AND status IN ($qstatus) WINDOW w AS (ORDER BY executed_at) ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "-",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#DC2626"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "text": {
+          "titleSize": 13,
+          "valueSize": 32
+        }
+      }
+    },
+    {
+      "id": 24,
+      "type": "stat",
+      "title": "Optimized share",
+      "description": "Share of executed queries that used the optimized variant (partitions / summary tables).",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 20,
+        "y": 20,
+        "w": 4,
+        "h": 6
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT executed_at AS \"time\", 100.0*sum((variant='optimized')::int) OVER w/count(*) OVER w AS v FROM query_log WHERE $__timeFilter(executed_at) AND query_name IN ($qname) AND variant IN ($variant) AND status IN ($qstatus) WINDOW w AS (ORDER BY executed_at) ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "noValue": "-",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#86EFAC"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "text": {
+          "titleSize": 13,
+          "valueSize": 32
+        }
+      }
+    },
+    {
+      "id": 25,
+      "type": "stat",
+      "title": "Queries today",
+      "description": "Daily active query count: queries executed today (from v_query_kpis). Ignores filters.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "staging_pg"
+      },
+      "gridPos": {
+        "x": 20,
+        "y": 26,
+        "w": 4,
+        "h": 6
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "staging_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT queries_today AS v FROM v_query_kpis"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "-",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#7DB3FF"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "text": {
+          "titleSize": 13,
+          "valueSize": 32
+        }
+      }
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "qname",
+        "label": "Query",
+        "type": "query",
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "staging_pg"
+        },
+        "query": "SELECT DISTINCT query_name FROM query_log ORDER BY 1",
+        "definition": "SELECT DISTINCT query_name FROM query_log ORDER BY 1",
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "sort": 1,
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0
+      },
+      {
+        "name": "variant",
+        "label": "Variant",
+        "type": "query",
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "staging_pg"
+        },
+        "query": "SELECT DISTINCT variant FROM query_log ORDER BY 1",
+        "definition": "SELECT DISTINCT variant FROM query_log ORDER BY 1",
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "sort": 1,
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0
+      },
+      {
+        "name": "qstatus",
+        "label": "Status",
+        "type": "query",
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "staging_pg"
+        },
+        "query": "SELECT DISTINCT status FROM query_log ORDER BY 1",
+        "definition": "SELECT DISTINCT status FROM query_log ORDER BY 1",
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "sort": 1,
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0
+      }
+    ]
+  },
+  "links": [
+    {
+      "type": "dashboards",
+      "title": "Dashboards",
+      "tags": [
+        "pharma"
+      ],
+      "asDropdown": false,
+      "includeVars": false,
+      "keepTime": true,
+      "icon": "external link",
+      "targetBlank": false,
+      "tooltip": "",
+      "url": ""
+    }
+  ]
+}

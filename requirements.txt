@@ -1,0 +1,6 @@
+pandas>=2.1
+psycopg2-binary
+watchdog
+python-dotenv
+openpyxl
+duckdb

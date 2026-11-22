@@ -1,0 +1,1 @@
+SELECT nonexistent_column FROM fact_pharmacy_sales;
